@@ -31,7 +31,26 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+const NUSHELL_THEME: Theme = Theme {
+    table: TableTheme {
+        color: "rgb(173, 186, 199)",
+        background: "rgb(34, 39, 46)",
+        arrow_fill: "rgb(240, 240, 240)",
+        row_background: "transparent",
+        alternate_row_background: "rgb(40, 44, 52)",
+        divider_fill: "rgb(143, 156, 169)",
+    },
+    scrollbar: ScrollbarTheme {
+        background: "rgb(44, 49, 56)",
+        thumb_background: "rgb(74, 79, 86)",
+        hover_thumb_background: "rgb(84, 89, 96)",
+        active_thumb_background: "rgb(94, 99, 106)",
+    },
+    ..DARK_THEME
+};
+
 fn app(cx: Scope) -> Element {
+    use_init_theme(cx, NUSHELL_THEME);
     let data = cx.consume_context::<Value>().unwrap();
 
     // Gather the columns
@@ -69,12 +88,10 @@ fn app(cx: Scope) -> Element {
                 for column in columns.iter() {
                     let cell = object
                         .get(column)
-                        .map(|prop| {
-                            match prop {
-                                Value::String(val) => Some(val.to_string()),
-                                Value::Number(num) => Some(num.to_string()),
-                                _ => None
-                            }
+                        .map(|prop| match prop {
+                            Value::String(val) => Some(val.to_string()),
+                            Value::Number(num) => Some(num.to_string()),
+                            _ => None,
                         })
                         .flatten()
                         .unwrap_or("❌".to_string());
@@ -91,6 +108,7 @@ fn app(cx: Scope) -> Element {
     render!(
         rect {
             padding: "10",
+            background: "rgb(20, 24, 32)",
             Table {
                 columns: columns.len(),
                 TableHead {
@@ -98,7 +116,7 @@ fn app(cx: Scope) -> Element {
                         for (n, text) in columns.iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                separator: n > 0,
+                                divider: n > 0,
                                 label {
                                     width: "100%",
                                     align: "center",
@@ -119,7 +137,7 @@ fn app(cx: Scope) -> Element {
                                 for (n, item) in row.iter().enumerate() {
                                     TableCell {
                                         key: "{n}",
-                                        separator: n > 0,
+                                        divider: n > 0,
                                         label {
                                             width: "100%",
                                             align: "right",
