@@ -4,12 +4,8 @@
 )]
 
 use freya::prelude::*;
-use itertools::Itertools;
 use serde_json::Value;
-use std::{
-    collections::HashSet,
-    io::{self, BufRead},
-};
+use std::io::{self, BufRead};
 
 fn main() -> io::Result<()> {
     let mut stdin = String::new();
@@ -58,17 +54,19 @@ fn app(cx: Scope) -> Element {
 
     // Gather the columns
     let columns = {
-        let mut columns = HashSet::new();
+        let mut columns = Vec::new();
         if let Some(rows) = data.as_array() {
             for row in rows {
                 if let Some(object) = row.as_object() {
                     for col in object.keys() {
-                        columns.insert(col.to_owned());
+                        if !columns.contains(col) {
+                            columns.push(col.to_owned());
+                        }
                     }
                 }
             }
         }
-        columns.into_iter().collect_vec()
+        columns
     };
 
     // Gather the rows
