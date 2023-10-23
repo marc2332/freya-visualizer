@@ -6,7 +6,10 @@
 use freya::prelude::*;
 use itertools::Itertools;
 use serde_json::Value;
-use std::io::{self, BufRead};
+use std::{
+    collections::HashSet,
+    io::{self, BufRead},
+};
 
 fn main() -> io::Result<()> {
     let mut stdin = String::new();
@@ -54,27 +57,19 @@ fn app(cx: Scope) -> Element {
     let data = cx.consume_context::<Value>().unwrap();
 
     // Gather the columns
-    let mut columns = data
-        .as_array()
-        .unwrap_or(&Vec::default())
-        .iter()
-        .flat_map(|col| {
-            if let Some(object) = col.as_object() {
-                let keys = object
-                    .keys()
-                    .collect_vec()
-                    .iter()
-                    .map(|v| v.to_string())
-                    .collect_vec();
-                keys
-            } else {
-                Vec::default()
+    let columns = {
+        let mut columns = HashSet::new();
+        if let Some(rows) = data.as_array() {
+            for row in rows {
+                if let Some(object) = row.as_object() {
+                    for col in object.keys() {
+                        columns.insert(col.to_owned());
+                    }
+                }
             }
-        })
-        .collect::<Vec<String>>();
-
-    columns.sort();
-    columns.dedup();
+        }
+        columns.into_iter().collect_vec()
+    };
 
     // Gather the rows
     let rows = data
